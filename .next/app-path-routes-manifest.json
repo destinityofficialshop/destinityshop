@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/orders/route": "/api/orders",
+  "/api/catalog/route": "/api/catalog",
+  "/api/catalog/reset/route": "/api/catalog/reset",
+  "/api/paypal/order/[orderId]/capture/route": "/api/paypal/order/[orderId]/capture",
+  "/api/paypal/order/route": "/api/paypal/order",
+  "/api/paypal/config/route": "/api/paypal/config",
+  "/admin/page": "/admin",
+  "/page": "/"
+}

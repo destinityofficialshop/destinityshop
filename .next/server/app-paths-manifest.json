@@ -1,7 +1,10 @@
 {
-  "/api/paypal/order/route": "app/api/paypal/order/route.js",
-  "/api/catalog/route": "app/api/catalog/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/orders/route": "app/api/orders/route.js",
+  "/api/catalog/route": "app/api/catalog/route.js",
+  "/api/catalog/reset/route": "app/api/catalog/reset/route.js",
+  "/api/paypal/order/[orderId]/capture/route": "app/api/paypal/order/[orderId]/capture/route.js",
+  "/api/paypal/order/route": "app/api/paypal/order/route.js",
   "/api/paypal/config/route": "app/api/paypal/config/route.js",
   "/admin/page": "app/admin/page.js",
   "/page": "app/page.js"

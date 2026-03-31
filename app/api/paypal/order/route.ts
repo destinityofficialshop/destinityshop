@@ -98,24 +98,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await upsertPendingOrder({
-      id: crypto.randomUUID(),
-      paypalOrderId: data.id as string,
-      status: "pending",
-      total: recalculatedTotal,
-      currency: config.currency,
-      createdAt: new Date().toISOString(),
-      items: items.map((item) => {
-        const product = catalogMap.get(item.id)!;
+    try {
+      await upsertPendingOrder({
+        id: crypto.randomUUID(),
+        paypalOrderId: data.id as string,
+        status: "pending",
+        total: recalculatedTotal,
+        currency: config.currency,
+        createdAt: new Date().toISOString(),
+        items: items.map((item) => {
+          const product = catalogMap.get(item.id)!;
 
-        return {
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          quantity: item.quantity
-        };
-      })
-    });
+          return {
+            productId: product.id,
+            name: product.name,
+            price: product.price,
+            quantity: item.quantity
+          };
+        })
+      });
+    } catch (storageError) {
+      console.warn("No se pudo registrar el pedido pendiente localmente.", storageError);
+    }
 
     return NextResponse.json(data);
   } catch (error) {

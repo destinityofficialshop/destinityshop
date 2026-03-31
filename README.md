@@ -22,12 +22,13 @@ Tienda online en Next.js con una estetica inspirada en Shopify: home comercial, 
 - `PAYPAL_ENV`: `sandbox` o `live`
 - `PAYPAL_CURRENCY`: moneda del checkout, por defecto `EUR`
 - `NEXT_PUBLIC_META_PIXEL_ID`: ID de Meta Pixel para cargar el base code y eventos en cliente
+- `DATABASE_URL`: conexión Postgres para catálogo y pedidos en producción
 
 ## Estructura
 
 - `app/`: App Router y rutas API
 - `components/`: componentes React de storefront y checkout
-- `lib/`: catálogo inicial y utilidades de PayPal
+- `lib/`: catálogo inicial, base de datos y utilidades de PayPal
 
 ## Flujo de pago
 
@@ -37,3 +38,8 @@ Tienda online en Next.js con una estetica inspirada en Shopify: home comercial, 
 - Next.js captura pagos en `/api/paypal/order/[orderId]/capture`
 
 Puedes cambiar el catálogo en `lib/products.ts`.
+
+## Persistencia
+
+- Si configuras `DATABASE_URL` o `POSTGRES_URL`, la app usa Postgres y crea tablas automáticamente.
+- Si no configuras base de datos, usa el fallback local actual.
