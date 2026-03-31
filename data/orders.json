@@ -1,0 +1,18 @@
+[
+  {
+    "id": "777e020d-4ab7-4ea4-b3d8-fe914a017c75",
+    "paypalOrderId": "29U04624343214644",
+    "status": "pending",
+    "total": 89,
+    "currency": "EUR",
+    "createdAt": "2026-03-31T20:38:36.394Z",
+    "items": [
+      {
+        "productId": "halo-lamp",
+        "name": "Halo Lamp",
+        "price": 89,
+        "quantity": 1
+      }
+    ]
+  }
+]
