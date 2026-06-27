@@ -1,21 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchCatalog } from "@/lib/catalog-storage";
 import { PaypalCheckout } from "@/components/paypal-checkout";
+import { fetchCatalog } from "@/lib/catalog-storage";
 import type { Product } from "@/lib/products";
 
 type CartMap = Record<string, Product & { quantity: number }>;
 
-const euro = new Intl.NumberFormat("es-ES", {
-  style: "currency",
-  currency: "EUR"
-});
+const euro = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
+
+const benefits = [
+  ["Diseño Innovador", "Cada accesorio está creado para aportar una estética moderna y funcionalidad superior."],
+  ["Compra Segura", "Procesos pensados para transacciones protegidas y privacidad total para tu tranquilidad."],
+  ["Experiencia Intuitiva", "Navega fácilmente y encuentra lo que necesitas gracias a un catálogo claro y optimizado para móvil."]
+];
 
 export function Storefront() {
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartMap>({});
-  const [catalogMessage, setCatalogMessage] = useState("Cargando catalogo...");
+  const [catalogMessage, setCatalogMessage] = useState("Cargando catálogo...");
 
   useEffect(() => {
     let active = true;
@@ -23,84 +26,49 @@ export function Storefront() {
     async function loadCatalog() {
       try {
         const products = await fetchCatalog();
-        if (!active) {
-          return;
-        }
-
+        if (!active) return;
         setCatalog(products);
         setCatalogMessage("");
       } catch (error) {
         console.error(error);
-        if (!active) {
-          return;
-        }
-
-        setCatalogMessage("No se pudo cargar el catalogo.");
+        if (!active) return;
+        setCatalogMessage("No se pudo cargar el catálogo.");
       }
     }
 
     loadCatalog();
-
     return () => {
       active = false;
     };
   }, []);
 
   const items = useMemo(() => Object.values(cart), [cart]);
-  const total = useMemo(
-    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [items]
-  );
-  const cartCount = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity, 0),
-    [items]
-  );
+  const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
+  const cartCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
 
   function addToCart(product: Product) {
-    if (product.stock <= 0) {
-      return;
-    }
+    if (product.stock <= 0) return;
 
     setCart((current) => {
       const existing = current[product.id];
       const nextQuantity = existing ? existing.quantity + 1 : 1;
+      if (nextQuantity > product.stock) return current;
 
-      if (nextQuantity > product.stock) {
-        return current;
-      }
-
-      return {
-        ...current,
-        [product.id]: {
-          ...product,
-          quantity: nextQuantity
-        }
-      };
+      return { ...current, [product.id]: { ...product, quantity: nextQuantity } };
     });
   }
 
   function updateQuantity(productId: string, delta: number) {
     setCart((current) => {
       const item = current[productId];
-
-      if (!item) {
-        return current;
-      }
-
+      if (!item) return current;
       const nextQuantity = item.quantity + delta;
       if (nextQuantity <= 0) {
         const { [productId]: removed, ...rest } = current;
         void removed;
         return rest;
       }
-
-      return {
-        ...current,
-        [productId]: {
-          ...item,
-          quantity: Math.min(nextQuantity, item.stock)
-        }
-      };
+      return { ...current, [productId]: { ...item, quantity: Math.min(nextQuantity, item.stock) } };
     });
   }
 
@@ -110,10 +78,8 @@ export function Storefront() {
 
   async function handlePaid() {
     clearCart();
-
     try {
-      const products = await fetchCatalog();
-      setCatalog(products);
+      setCatalog(await fetchCatalog());
     } catch (error) {
       console.error(error);
     }
@@ -121,154 +87,78 @@ export function Storefront() {
 
   return (
     <div className="storefront">
-      <div className="announcement-bar">
-        Envio premium en Peninsula, pago seguro con PayPal y una base visual mas cercana a Shopify.
-      </div>
-
-      <header className="header">
+      <header className="site-header">
+        <a className="skip-link" href="#contenido">Saltar al contenido</a>
         <div className="container header-shell">
-          <a className="logo" href="#top">
-            <span className="logo-badge">D</span>
+          <a className="brand" href="#inicio" aria-label="Destinity ES inicio">
+            <span className="brand-mark">D</span>
             <span>Destinity ES</span>
           </a>
-          <nav className="nav-links">
-            <a href="#catalogo">Catalogo</a>
-            <a href="#colecciones">Colecciones</a>
-            <a href="#checkout">Checkout</a>
-            <a href="/admin">Admin</a>
+          <nav className="nav-links" aria-label="Navegación principal">
+            <a href="#servicios">Servicios</a>
+            <a href="#precios">Precios</a>
+            <a href="#faq">FAQ</a>
+            <a href="#sobre">Sobre</a>
+            <a href="#contacto">Contacto</a>
           </nav>
-          <div className="header-actions">
-            <a className="button button-secondary" href="#colecciones">
-              Descubrir
-            </a>
-            <a className="cart-button" href="#checkout">
-              Carrito ({cartCount})
-            </a>
-          </div>
+          <a className="cart-link" href="#carrito" aria-label={`Carrito con ${cartCount} artículos`}>
+            🛒 <span>{cartCount}</span>
+          </a>
         </div>
       </header>
 
-      <main id="top">
-        <section className="hero">
-          <div className="container hero-grid">
-            <div className="hero-content">
-              <p className="eyebrow">Tienda online premium</p>
-              <h1 className="hero-title">Un storefront limpio, vendible y listo para cobrar.</h1>
-              <p className="hero-copy">
-                Destinity ES ahora nace como una tienda React/Next.js con una direccion visual
-                cercana a Shopify: bloques claros, producto al frente y checkout conectado a tu
-                cuenta de PayPal Developer.
-              </p>
-              <div className="hero-cta">
-                <a className="button button-primary" href="#catalogo">
-                  Comprar ahora
-                </a>
-                <a className="button button-secondary" href="#checkout">
-                  Ver checkout
-                </a>
-              </div>
-              <div className="hero-metrics">
-                <div className="metric">
-                  <strong>48h</strong>
-                  <span>Tiempo de preparacion de pedidos en el ejemplo.</span>
-                </div>
-                <div className="metric">
-                  <strong>App Router</strong>
-                  <span>Base moderna para crecer a colecciones, CMS o admin.</span>
-                </div>
-                <div className="metric">
-                  <strong>PayPal API</strong>
-                  <span>Checkout real listo para activar con tus credenciales.</span>
-                </div>
-              </div>
-            </div>
-
-            <aside className="hero-panel">
-              <div className="hero-panel-inner">
-                <span className="hero-panel-tag">Launch edit</span>
-                <h2 className="hero-panel-title">Curated objects for digital living.</h2>
-                <p>
-                  Un bloque hero más comercial, con ritmo visual y jerarquía clara para empujar la
-                  conversión desde la primera pantalla.
-                </p>
-                <ul className="hero-list">
-                  <li>Colecciones destacadas y tarjetas con lectura inmediata.</li>
-                  <li>Carrito claro para compras rápidas.</li>
-                  <li>Base preparada para ampliar catálogo, CMS o inventario real.</li>
-                </ul>
-              </div>
-            </aside>
+      <main id="contenido">
+        <section className="hero" id="inicio">
+          <div className="hero-art" aria-hidden="true" />
+          <div className="container hero-inner">
+            <p className="eyebrow">Destinity ES</p>
+            <h1>Accesorios tecnológicos con estilo y confianza</h1>
+            <p>
+              En Destinity ES, encuentra productos innovadores y funcionales que combinan diseño
+              moderno con calidad garantizada. Compra con seguridad y disfruta de una experiencia
+              simple y confiable.
+            </p>
+            <a className="button button-primary" href="#catalogo">Ver catálogo</a>
           </div>
         </section>
 
-        <section className="section" id="colecciones">
-          <div className="container">
-            <div className="promo-grid">
-              <article className="promo-card">
-                <strong>New arrival flow</strong>
-                <span className="small-copy">
-                  Presentacion sobria de productos destacados como en un storefront moderno.
-                </span>
-              </article>
-              <article className="promo-card">
-                <strong>Pago visible</strong>
-                <span className="small-copy">
-                  La integracion de PayPal queda visible desde la ficha comercial.
-                </span>
-              </article>
-              <article className="promo-card">
-                <strong>Base escalable</strong>
-                <span className="small-copy">
-                  Estructura pensada para migrar luego a CMS, base de datos o panel admin.
-                </span>
-              </article>
+        <section className="intro-section" id="servicios">
+          <div className="container split-grid">
+            <div>
+              <p className="eyebrow">Tecnología de vanguardia</p>
+              <h2>Tecnología de vanguardia con garantía de confianza</h2>
+            </div>
+            <div>
+              <p>
+                Descubre Destinity ES, tu tienda online ideal para accesorios tecnológicos con estilo
+                y seguridad en cada compra.
+              </p>
+              <a className="text-link" href="#catalogo">Explorar catálogo completo</a>
             </div>
           </div>
         </section>
 
-        <section className="section" id="catalogo">
+        <section className="catalog-section" id="catalogo">
           <div className="container">
-            <div className="section-header">
-              <div>
-                <p className="eyebrow">Catalogo</p>
-                <h2 className="section-title">Shop the edit</h2>
-              </div>
-              <p className="section-copy">
-                Productos demo listos para sustituir por tu catálogo real.
-              </p>
+            <div className="section-heading">
+              <p className="eyebrow">Catálogo destacado</p>
+              <h2>Tecnología y Estilo a Tu Alcance</h2>
+              <p>Descubre nuestro catálogo exclusivo de accesorios tecnológicos diseñados para mejorar tu vida diaria con estilo y confianza.</p>
             </div>
-
-            {catalogMessage ? <div className="checkout-status error">{catalogMessage}</div> : null}
-
+            {catalogMessage ? <div className="status error">{catalogMessage}</div> : null}
             <div className="product-grid">
               {catalog.map((product) => (
                 <article className="product-card" key={product.id}>
-                  <div className="product-media">
-                    <span className="product-media-label">{product.badge}</span>
-                  </div>
+                  <div className="product-image"><span>{product.badge}</span></div>
                   <div className="product-body">
-                    <div className="product-head">
-                      <div>
-                        <p className="eyebrow">{product.category}</p>
-                        <h3 className="product-name">{product.name}</h3>
-                      </div>
-                      <span className="price">{euro.format(product.price)}</span>
-                    </div>
-                    <p className="product-copy">{product.description}</p>
-                    <div className="product-actions">
-                      <span className="small-copy">
-                        {product.stock > 0
-                          ? `${product.stock} uds. disponibles`
-                          : "Sin stock temporalmente"}
-                      </span>
-                      <button
-                        className="button button-primary"
-                        disabled={product.stock <= 0}
-                        onClick={() => addToCart(product)}
-                      >
-                        {product.stock > 0 ? "Anadir al carrito" : "Agotado"}
-                      </button>
-                    </div>
+                    <h3>{product.name}</h3>
+                    <p className="category">{product.category}</p>
+                    <strong className="price">{euro.format(product.price)}</strong>
+                    <p>{product.description}</p>
+                    <button className="button button-dark" disabled={product.stock <= 0} onClick={() => addToCart(product)}>
+                      {product.stock > 0 ? "Añadir al carrito" : "Agotado"}
+                    </button>
+                    <a className="view-cart" href="#carrito">Ver carrito</a>
                   </div>
                 </article>
               ))}
@@ -276,99 +166,65 @@ export function Storefront() {
           </div>
         </section>
 
-        <section className="section">
-          <div className="container story-grid">
-            <article className="story-card">
-              <p className="eyebrow">Brand story</p>
-              <h2 className="section-title">Una estética más alineada con una tienda que vende.</h2>
-              <p className="story-copy">
-                Simplifiqué la navegación, ordené el hero como una landing comercial y dejé una
-                rejilla de producto clara, con el comportamiento visual que suele esperarse en un
-                storefront tipo Shopify.
-              </p>
-            </article>
-            <article className="story-card alt">
-              <p className="eyebrow">What ships now</p>
-              <ul className="story-list">
-                <li>App Router en Next.js y componentes React reutilizables.</li>
-                <li>Rutas API para crear y capturar pedidos con PayPal.</li>
-                <li>Carrito local que ya controla cantidades y total del pedido.</li>
-              </ul>
-            </article>
+        <section className="promo-band" id="precios">
+          <div className="container promo-content">
+            <h2>Tecnología y diseño que inspiran tu día a día</h2>
+            <p>Descubre nuestras promociones exclusivas y ahorra en los mejores accesorios tecnológicos con total confianza.</p>
+            <a className="button button-light" href="#catalogo">Ver catálogo completo</a>
           </div>
         </section>
 
-        <section className="section" id="checkout">
-          <div className="container commerce-grid">
-            <div className="cart-panel">
-              <div className="cart-header">
-                <div>
-                  <p className="eyebrow">Carrito</p>
-                  <h2 className="section-title">Tu pedido</h2>
-                </div>
-                <button className="button button-secondary" onClick={clearCart}>
-                  Vaciar
-                </button>
-              </div>
-
-              <div className="cart-list">
-                {items.length === 0 ? (
-                  <div className="cart-empty">
-                    El carrito está vacío. Añade productos para activar el checkout real.
-                  </div>
-                ) : (
-                  items.map((item) => (
-                    <article className="cart-item" key={item.id}>
-                      <div className="cart-item-visual" />
-                      <div>
-                        <p className="cart-item-title">{item.name}</p>
-                        <span className="cart-item-meta">{euro.format(item.price)} por unidad</span>
-                        <div className="quantity-controls">
-                          <button
-                            className="quantity-button"
-                            onClick={() => updateQuantity(item.id, -1)}
-                          >
-                            -
-                          </button>
-                          <span>{item.quantity}</span>
-                          <button
-                            className="quantity-button"
-                            onClick={() => updateQuantity(item.id, 1)}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                      <strong>{euro.format(item.price * item.quantity)}</strong>
-                    </article>
-                  ))
-                )}
-              </div>
+        <section className="features" id="faq">
+          <div className="container features-grid">
+            <div className="feature-copy">
+              <p className="eyebrow">Confianza cotidiana</p>
+              <h2>Tecnología y estilo para cada día</h2>
+              <p>Descubre productos exclusivos que combinan innovación y diseño, pensados para mejorar tu experiencia tecnológica con total confianza.</p>
             </div>
+            {benefits.map(([title, copy]) => (
+              <article className="feature-card" key={title}>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-            <div className="checkout-panel">
-              <p className="eyebrow">Checkout</p>
-              <h2 className="section-title">Pago rápido y seguro</h2>
-              <p className="section-copy">
-                El total se calcula en cliente y el pedido se crea en el backend de Next.js usando
-                tu cuenta de PayPal.
-              </p>
+        <section className="about" id="sobre">
+          <div className="container about-card">
+            <div className="portrait" aria-hidden="true">CM</div>
+            <div>
+              <h2>Carlos Méndez</h2>
+              <p className="category">Experto en accesorios tecnológicos</p>
+              <p>Destinity ES brinda productos tecnológicos con estilo y confianza, respaldados por una atención profesional y eficiente.</p>
+            </div>
+          </div>
+        </section>
 
-              <div className="summary">
-                <div className="summary-row">
-                  <span>Subtotal</span>
-                  <strong>{euro.format(total)}</strong>
-                </div>
-                <div className="summary-row">
-                  <span>Envío</span>
-                  <strong>Gratis</strong>
-                </div>
-                <div className="summary-row summary-total">
-                  <span>Total</span>
-                  <strong>{euro.format(total)}</strong>
-                </div>
-              </div>
-
+        <section className="cart-section" id="carrito">
+          <div className="container cart-grid">
+            <div className="cart-panel">
+              <h2>Tu carrito <span>(artículos: {cartCount})</span></h2>
+              {items.length === 0 ? <p className="empty">¡Tu carrito está actualmente vacío!</p> : items.map((item) => (
+                <article className="cart-item" key={item.id}>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <p>{euro.format(item.price)} / unidad</p>
+                    <div className="quantity-controls">
+                      <button onClick={() => updateQuantity(item.id, -1)}>−</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, 1)}>＋</button>
+                    </div>
+                  </div>
+                  <strong>{euro.format(item.price * item.quantity)}</strong>
+                </article>
+              ))}
+              <button className="button button-light" onClick={clearCart}>Empezar a comprar / Vaciar</button>
+            </div>
+            <div className="checkout-panel" id="contacto">
+              <h2>Ir a finalizar compra</h2>
+              <div className="summary-row"><span>Subtotal</span><strong>{euro.format(total)}</strong></div>
+              <p>Los gastos de envío y descuentos se calculan en el momento del pago.</p>
               <PaypalCheckout items={items} total={total} onPaid={handlePaid} />
             </div>
           </div>
@@ -376,9 +232,9 @@ export function Storefront() {
       </main>
 
       <footer className="footer">
-        <div className="container">
-          Destinity ES. Base de tienda en Next.js preparada para catálogo real, CMS e integración
-          completa de PayPal.
+        <div className="container footer-inner">
+          <strong>Destinity ES</strong>
+          <span>Instagram · Facebook · X</span>
         </div>
       </footer>
     </div>
