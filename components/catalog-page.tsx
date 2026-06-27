@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { PageShell, SubpageHero } from "@/components/page-shell";
 import { PaypalCheckout } from "@/components/paypal-checkout";
 import { fetchCatalog } from "@/lib/catalog-storage";
 import type { Product } from "@/lib/products";
 
 type CartMap = Record<string, Product & { quantity: number }>;
+
+type CatalogPageProps = {
+  mode?: "catalogo" | "tienda";
+};
+
 const euro = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 
-export function CatalogPage() {
+export function CatalogPage({ mode = "catalogo" }: CatalogPageProps) {
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartMap>({});
   const [catalogMessage, setCatalogMessage] = useState("Cargando catálogo...");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -35,6 +42,16 @@ export function CatalogPage() {
   const items = useMemo(() => Object.values(cart), [cart]);
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
   const cartCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase("es-ES");
+  const visibleProducts = useMemo(() => {
+    if (!normalizedSearch) return catalog;
+    return catalog.filter((product) => {
+      const searchableText = `${product.name} ${product.category} ${product.description} ${product.badge}`.toLocaleLowerCase("es-ES");
+      return searchableText.includes(normalizedSearch);
+    });
+  }, [catalog, normalizedSearch]);
+
+  const isStore = mode === "tienda";
 
   function addToCart(product: Product) {
     if (product.stock <= 0) return;
@@ -60,6 +77,16 @@ export function CatalogPage() {
     });
   }
 
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSearchTerm(searchInput);
+  }
+
+  function clearSearch() {
+    setSearchInput("");
+    setSearchTerm("");
+  }
+
   function clearCart() { setCart({}); }
   async function handlePaid() {
     clearCart();
@@ -69,16 +96,37 @@ export function CatalogPage() {
   return (
     <PageShell>
       <SubpageHero
-        eyebrow="Catálogo destacado"
-        title="Tecnología y Estilo a Tu Alcance"
-        copy="Compra desde una subpágina dedicada al catálogo, con carrito y checkout separados del resto del contenido corporativo."
+        eyebrow={isStore ? "Tienda" : "Catálogo destacado"}
+        title={isStore ? "Todos los productos" : "Tecnología y Estilo a Tu Alcance"}
+        copy={isStore ? "Explora todos los productos disponibles en Destinity ES y utiliza el botón de buscar para encontrar accesorios concretos." : "Compra desde una subpágina dedicada al catálogo, con carrito y checkout separados del resto del contenido corporativo."}
       />
 
       <section className="catalog-section">
         <div className="container">
+          <div className="shop-toolbar">
+            <div>
+              <p className="eyebrow">{isStore ? "Buscar en tienda" : "Buscar en catálogo"}</p>
+              <h2>{isStore ? "Tienda" : "Catálogo"}</h2>
+              <p>Mostrando {visibleProducts.length} de {catalog.length} productos.</p>
+            </div>
+            <form className="search-form" onSubmit={handleSearch} role="search">
+              <label className="sr-only" htmlFor="product-search">Buscar productos</label>
+              <input
+                id="product-search"
+                placeholder="Buscar producto..."
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+              />
+              <button className="button button-dark" type="submit">Buscar</button>
+              {searchTerm ? <button className="button button-light" type="button" onClick={clearSearch}>Limpiar</button> : null}
+            </form>
+          </div>
           {catalogMessage ? <div className="status error">{catalogMessage}</div> : null}
+          {visibleProducts.length === 0 && !catalogMessage ? (
+            <div className="empty">No hay productos que coincidan con “{searchTerm}”.</div>
+          ) : null}
           <div className="product-grid">
-            {catalog.map((product) => (
+            {visibleProducts.map((product) => (
               <article className="product-card" key={product.id}>
                 <div className="product-image"><span>{product.badge}</span></div>
                 <div className="product-body">

@@ -1,5 +1,6 @@
 export const navItems = [
   { href: "/servicios", label: "Servicios" },
+  { href: "/tienda", label: "Tienda" },
   { href: "/catalogo", label: "Catálogo" },
   { href: "/precios", label: "Precios" },
   { href: "/faq", label: "FAQ" },
@@ -27,6 +28,11 @@ export const pageCards = [
     href: "/servicios",
     title: "Servicios",
     copy: "Conoce cómo Destinity ES selecciona accesorios tecnológicos útiles, modernos y confiables."
+  },
+  {
+    href: "/tienda",
+    title: "Tienda",
+    copy: "Accede a todos los productos disponibles y usa el buscador para encontrar accesorios rápidamente."
   },
   {
     href: "/catalogo",

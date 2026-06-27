@@ -16,7 +16,7 @@ export function Storefront() {
             para que la navegación sea más clara y profesional.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" href="/catalogo">Ver catálogo</Link>
+            <Link className="button button-primary" href="/tienda">Ir a Tienda</Link>
             <Link className="button button-light" href="/servicios">Conocer servicios</Link>
           </div>
         </div>
@@ -33,7 +33,7 @@ export function Storefront() {
               Servicios, catálogo, promociones, preguntas frecuentes, información de marca y contacto
               tienen rutas independientes, manteniendo una portada limpia enfocada en dirigir al usuario.
             </p>
-            <Link className="text-link" href="/catalogo">Explorar catálogo completo</Link>
+            <Link className="text-link" href="/tienda">Explorar todos los productos</Link>
           </div>
         </div>
       </section>
