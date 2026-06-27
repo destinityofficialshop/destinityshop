@@ -91,3 +91,21 @@ p { color: var(--muted); line-height: 1.75; }
   .split-grid, .product-grid, .features-grid, .about-card, .cart-grid { grid-template-columns: 1fr; }
   .intro-section, .catalog-section, .features, .about, .cart-section { padding: 4rem 0; }
 }
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: .85rem; margin-top: 1.8rem; }
+.page-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.page-card { min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; border: 1px solid var(--line); border-radius: 28px; background: var(--cream); box-shadow: var(--shadow); text-decoration: none; }
+.page-card span { color: var(--gold-dark); font-weight: 800; }
+.subpage-hero { padding: 7rem 0 5rem; color: white; background: linear-gradient(135deg, rgba(47,36,27,.92), rgba(185,139,75,.72)), linear-gradient(120deg, #7d6046, #eadfce); }
+.subpage-hero .container { max-width: 900px; }
+.subpage-hero h1 { margin: 0; font-size: clamp(2.8rem, 7vw, 5.8rem); }
+.subpage-hero p:not(.eyebrow) { max-width: 760px; color: rgba(255,255,255,.88); font-size: 1.1rem; }
+.centered-action { margin-top: 2rem; text-align: center; }
+.inner-band { margin: 0; }
+.standalone-about { padding-top: 5rem; }
+.contact-card { max-width: 760px; padding: 2rem; border: 1px solid var(--line); border-radius: 30px; background: var(--cream); box-shadow: var(--shadow); text-align: center; }
+
+@media (max-width: 900px) {
+  .page-card-grid { grid-template-columns: 1fr; }
+  .subpage-hero { padding: 5rem 0 4rem; }
+}
